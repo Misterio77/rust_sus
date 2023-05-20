@@ -43,14 +43,15 @@ fn dbc_decompression() {
         .expect("erro");
 }
 
+#[derive(Default)]
 struct SP {
-    sp_cnes: u32,
-    sp_aa: u16,
-    sp_mm: u8,
-    sp_atoprof: String,
-    sp_valato: f32,
-    sp_qtd_ato: u16,
-    sp_procrea: String,
+    cnes: Option<u32>,
+    aa: Option<u16>,
+    mm: Option<u8>,
+    atoprof: Option<String>,
+    valato: Option<f32>,
+    qtd_ato: Option<u16>,
+    procrea: Option<String>,
 }
 
 fn read_dbf() {
@@ -61,43 +62,27 @@ fn read_dbf() {
     println!("Tamanho: {}", records.len());
     let mut soma = 0.0;
     for record in records {
+        let mut sp = SP::default();
         for (name, value) in record {
-            let mut sp_cnes = "";
-            let mut sp_aa = "";
-            let mut sp_mm = "";
-            let mut sp_atoprof = "";
-            let mut sp_valato = 0.0;
-            let mut sp_qtd_ato = 0.0;
-            let mut sp_procrea = "";
-
             match value {
-                FieldValue::Character(Some(character_value)) => {
+                FieldValue::Character(Some(x)) => {
                     //println!("Character: {}", character_value);
                     match name.as_str() {
-                        "SP_CNES" => sp_cnes = &character_value,
-                        "SP_ATOPROF" => sp_atoprof = &character_value,
-                        "SP_PROCREA" => sp_procrea = &character_value,
-                        "SP_AA" => sp_aa = &character_value,
-                        "SP_MM" => sp_mm = &character_value,
+                        "SP_PROCREA" => sp.procrea = Some(x),
+                        "SP_CNES" => sp.cnes = x.parse().ok(),
+                        "SP_ATOPROF" => sp.atoprof = x.parse().ok(),
+                        "SP_AA" => sp.aa = x.parse().ok(),
+                        "SP_MM" => sp.mm = x.parse().ok(),
                         _ => {}
                     }
                 }
-                FieldValue::Numeric(Some(numeric_value)) => match name.as_str() {
-                    "SP_QTD_ATO" => sp_qtd_ato = numeric_value,
-                    "SP_VALATO" => sp_valato = numeric_value,
+                FieldValue::Numeric(Some(x)) => match name.as_str() {
+                    "SP_QTD_ATO" => sp.qtd_ato = Some(x as u16),
+                    "SP_VALATO" => sp.valato = Some(x as f32),
                     _ => {}
                 },
                 _ => {}
             }
-            let sp = SP {
-                sp_cnes: sp_cnes.parse::<u32>().unwrap(),
-                sp_atoprof: sp_atoprof.to_string(),
-                sp_procrea: sp_procrea.to_string(),
-                sp_aa: sp_aa.parse::<u16>().unwrap(),
-                sp_mm: sp_mm.parse::<u8>().unwrap(),
-                sp_qtd_ato: sp_qtd_ato as u16,
-                sp_valato: sp_valato as f32,
-            };
         }
     }
     println!("soma final: {:?}", soma);
